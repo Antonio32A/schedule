@@ -1,0 +1,20 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "wrangler dev src/index.ts",
+        "deploy": "wrangler deploy --minify src/index.ts"
+    },
+    "dependencies": {
+        "@block65/webcrypto-web-push": "^0.3.2",
+        "cloudflare-workers-and-google-oauth": "^2.0.0",
+        "hono": "^4.2.8",
+        "query-string": "^9.0.0",
+        "worker-auth-providers": "^0.0.13-beta.4"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20240403.0",
+        "@types/query-string": "^6.3.0",
+        "type-fest": "^4.17.0",
+        "wrangler": "^3.47.0"
+    }
+}

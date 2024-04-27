@@ -1,0 +1,12 @@
+name = "schedule"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+kv_namespaces = [
+    { binding = "KV_STORE", id = "3b83a604ca4c436fb016a62c7ad68ecd", preview_id = "3b83a604ca4c436fb016a62c7ad68ecd"}
+]
+
+[[d1_databases]]
+binding = "D1_DATABASE"
+database_name = "schedule-db"
+database_id = "caa17ead-13b3-4538-9776-941a976fa6a6"
