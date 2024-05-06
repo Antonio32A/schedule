@@ -1,21 +1,12 @@
-import { Bindings, Variables } from "../types";
 import { buildPushPayload, PushMessage, PushSubscription, VapidKeys } from "@block65/webcrypto-web-push";
-import { Context } from "hono";
-import { User, Users } from "./users";
+import { User } from "./db/users";
+import { Subscriptions } from "./db/subscriptions";
+import { Contextable } from "./contextable";
 
-export class Notifications {
-    private ctx: Context<{ Bindings: Bindings, Variables: Variables }>;
-
-    constructor(ctx: Context<{ Bindings: Bindings, Variables: Variables }>) {
-        this.ctx = ctx;
-    }
-
-    static from(ctx: Context<{ Bindings: Bindings, Variables: Variables }>): Notifications {
-        return new Notifications(ctx);
-    }
-
+export class Notifications extends Contextable {
     public async sendNotification(user: User, message: object) {
-        const subscription = await Users.from(this.ctx).getSubscription(user)
+        const subscription = await Subscriptions.from(this.ctx).findSubscription(user);
+        if (!subscription) return;
         return this.sendNotificationToSubscription(subscription, message);
     }
 
@@ -37,6 +28,6 @@ export class Notifications {
             subject: "https://schedule.antonio32a.com",
             publicKey: this.ctx.env.NOTIFICATION_PUBLIC_KEY,
             privateKey: this.ctx.env.NOTIFICATION_PRIVATE_KEY
-        }
+        };
     }
 }

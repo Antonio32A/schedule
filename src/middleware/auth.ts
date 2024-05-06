@@ -1,6 +1,7 @@
 import { Bindings, Variables } from "../types";
 import { Context, Next } from "hono";
-import { Users } from "../lib/users";
+import { Users } from "../lib/db/users";
+import { Keys } from "../lib/db/keys";
 
 export default async (ctx: Context<{ Bindings: Bindings, Variables: Variables }>, next: Next) => {
     const { authorization } = ctx.req.header();
@@ -9,7 +10,7 @@ export default async (ctx: Context<{ Bindings: Bindings, Variables: Variables }>
     }
 
     const token = authorization.split(" ")[1];
-    const foundKey = await Users.from(ctx).findKey(token);
+    const foundKey = await Keys.from(ctx).findKey(token);
     if (!foundKey) {
         return ctx.text("Forbidden", 403);
     }

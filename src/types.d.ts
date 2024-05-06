@@ -1,4 +1,5 @@
-import { APIKey, User } from "./lib/users";
+import { User } from "./lib/db/users";
+import { APIKey } from "./lib/db/keys";
 
 export type Bindings = {
     KV_STORE: KVNamespace;

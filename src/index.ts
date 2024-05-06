@@ -1,8 +1,9 @@
 import { Context, Hono } from "hono";
 import { Bindings, Variables } from "./types";
+import { cors } from "hono/cors";
 import loginHandler from "./routes/login";
 import userHandler from "./routes/user";
-import { cors } from "hono/cors";
+import notifyHandler from "./cron/notify";
 
 const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
@@ -19,4 +20,10 @@ userHandler(app);
 loginHandler(app);
 
 // noinspection JSUnusedGlobalSymbols
-export default app;
+export default {
+    fetch: app.fetch,
+    scheduled: async (event: ScheduledEvent, env: Bindings) => {
+        const ctx = { env } as Context<{ Bindings: Bindings, Variables: Variables }>;
+        return await notifyHandler(ctx, event);
+    }
+};

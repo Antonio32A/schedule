@@ -1,58 +1,54 @@
-import { Context } from "hono";
-import { Bindings, Variables } from "../types";
 import { google } from "worker-auth-providers";
-import { Google } from "worker-auth-providers/dist/providers/google";
+import { Google as GoogleData } from "worker-auth-providers/dist/providers/google";
+import { Contextable } from "./contextable";
 
 const EVENTS_ENDPOINT = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 const SCOPES = ["profile", "https://www.googleapis.com/auth/calendar.events.readonly"];
 
-export const createRedirectUrl = async (
-    ctx: Context<{ Bindings: Bindings, Variables: Variables }>,
-    callbackPath: string
-): Promise<string> => google.redirect({
-    options: {
-        clientId: ctx.env.GOOGLE_CLIENT_ID,
-        redirectTo: ctx.env.DOMAIN + callbackPath,
-        scope: [SCOPES.join(" ")]
-    }
-});
-
-export const login = async (
-    ctx: Context<{ Bindings: Bindings, Variables: Variables }>,
-    code: string,
-    callbackPath: string
-): Promise<LoginResponse> => {
-    const options = {
-        clientId: ctx.env.GOOGLE_CLIENT_ID,
-        clientSecret: ctx.env.GOOGLE_CLIENT_SECRET,
-        redirectUrl: ctx.env.DOMAIN + callbackPath
-    };
-
-    const tokens = await google.getTokensFromCode(code, options);
-    const user = await google.getUser(tokens.access_token) as Google.UserResponse;
-    const events = (await listEvents(tokens.access_token)).items;
-    return { user, events } as LoginResponse;
-};
-
-const listEvents = async (token: string): Promise<ListEventsResponse> => {
-    const response = await fetch(
-        EVENTS_ENDPOINT,
-        {
-            headers: {
-                authorization: `Bearer ${token}`
+export class Google extends Contextable {
+    async createRedirectUrl(callbackPath: string): Promise<string> {
+        return google.redirect({
+            options: {
+                clientId: this.ctx.env.GOOGLE_CLIENT_ID,
+                redirectTo: this.ctx.env.DOMAIN + callbackPath,
+                scope: [SCOPES.join(" ")]
             }
-        }
-    );
+        });
+    }
 
-    return await response.json();
-};
+    async login(code: string, callbackPath: string): Promise<LoginResponse> {
+        const options = {
+            clientId: this.ctx.env.GOOGLE_CLIENT_ID,
+            clientSecret: this.ctx.env.GOOGLE_CLIENT_SECRET,
+            redirectUrl: this.ctx.env.DOMAIN + callbackPath
+        };
+
+        const tokens = await google.getTokensFromCode(code, options);
+        const user = await google.getUser(tokens.access_token) as GoogleData.UserResponse;
+        const events = (await this.listEvents(tokens.access_token)).items;
+        return { user, events } as LoginResponse;
+    }
+
+    private async listEvents(token: string): Promise<ListEventsResponse> {
+        const response = await fetch(
+            EVENTS_ENDPOINT,
+            {
+                headers: {
+                    authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        return await response.json();
+    }
+}
 
 export interface LoginResponse {
-    user: Google.UserResponse,
+    user: GoogleData.UserResponse,
     events: CalendarEvent[]
 }
 
-interface ListEventsResponse {
+export interface ListEventsResponse {
     kind: string;
     etag: string;
     summary: string;
@@ -65,7 +61,7 @@ interface ListEventsResponse {
     items: CalendarEvent[];
 }
 
-interface CalendarEvent {
+export interface CalendarEvent {
     kind: string;
     etag: string;
     id: string;
@@ -74,8 +70,8 @@ interface CalendarEvent {
     created: string;
     updated: string;
     summary: string;
-    description: string;
-    location: string;
+    description: string | null;
+    location: string | null;
     colorId: string;
     creator: {
         email: string;

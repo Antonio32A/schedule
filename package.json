@@ -1,7 +1,7 @@
 {
     "private": true,
     "scripts": {
-        "dev": "wrangler dev src/index.ts",
+        "dev": "wrangler dev src/index.ts --test-scheduled",
         "deploy": "wrangler deploy --minify src/index.ts"
     },
     "dependencies": {
@@ -9,6 +9,7 @@
         "cloudflare-workers-and-google-oauth": "^2.0.0",
         "hono": "^4.2.8",
         "query-string": "^9.0.0",
+        "rrule": "^2.8.1",
         "worker-auth-providers": "^0.0.13-beta.4"
     },
     "devDependencies": {

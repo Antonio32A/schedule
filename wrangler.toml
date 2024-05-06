@@ -10,3 +10,6 @@ kv_namespaces = [
 binding = "D1_DATABASE"
 database_name = "schedule-db"
 database_id = "caa17ead-13b3-4538-9776-941a976fa6a6"
+
+[triggers]
+crons = ["* * * * *"]
