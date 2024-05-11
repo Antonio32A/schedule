@@ -9,10 +9,14 @@ const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
 app.use("*", cors({
     origin: (_origin: string, ctx: Context<{ Bindings: Bindings, Variables: Variables }>) => {
+        console.log(ctx.env.DEV);
         if (ctx.env.DEV) {
+            console.log("DEV *")
             return "*";
         }
-        return "https://schedule-frontend-5fa.pages.dev/";
+
+        console.log(ctx.env.FRONTEND_DOMAIN);
+        return ctx.env.FRONTEND_DOMAIN;
     }
 }));
 

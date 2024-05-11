@@ -34,7 +34,7 @@ export default (app: Hono<{ Bindings: Bindings, Variables: Variables }>) => {
         await Subscriptions.from(ctx).createOrUpdateSubscription(user, subscription);
         await Notifications.from(ctx).sendNotificationToSubscription(
             subscription,
-            { title: "test", body: "AAAAA" }
+            { title: "Raspored", body: "Uspješno ste se pretplatili na obavijesti!" }
         );
         return ctx.text("OK");
     });

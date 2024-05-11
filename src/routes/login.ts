@@ -24,6 +24,5 @@ export default (app: Hono<{ Bindings: Bindings, Variables: Variables }>) => {
         const key = await Keys.from(ctx).createAPIKey(createdUser.id);
         ctx.header("Authorization", `Bearer ${key.key}`);
         return ctx.redirect(ctx.env.FRONTEND_DOMAIN + "/?key=" + key.key);
-        // return ctx.redirect("http://localhost:3000/?key=" + key.key);
     });
 }
