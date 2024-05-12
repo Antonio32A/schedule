@@ -4,6 +4,7 @@ import { CalendarEvent } from "../google";
 import { RRule, rrulestr } from "rrule";
 
 const REQUIRED_TAG = "#raspored";
+const ONE_TIME_RRULE = "FREQ=DAILY;COUNT=1";
 
 export class Events extends Database {
     async importEvents(events: CalendarEvent[], user: User): Promise<void> {
@@ -11,11 +12,11 @@ export class Events extends Database {
         const values = events.flatMap(it => [
             it.id,
             it.summary,
-            it.description,
+            it.description?.replace(REQUIRED_TAG, "").trim() ?? "",
             it.location ?? "",
             Date.parse(it.start.dateTime),
             Date.parse(it.end.dateTime),
-            it.recurrence[0],
+            it.recurrence?.[0] ?? ONE_TIME_RRULE,
             user.id
         ]);
 
@@ -45,12 +46,7 @@ export class Events extends Database {
 
     async getRunningEventsInRange(start: Date, end: Date): Promise<Event[]> {
         const events = await this.getParsedEvents();
-
-        return events.filter(event => {
-            const duration = event.endTime - event.startTime;
-            const dates = event.rrule.between(new Date(start.getTime() - duration), end);
-            return dates.length > 0;
-        });
+        return events.filter(event => Events.isRunning(event, start, end));
     }
 
     async getNextEvent(currentEvent: Event, user: User, currentTime: Date): Promise<Event | null> {
@@ -68,10 +64,32 @@ export class Events extends Database {
 
     async getParsedEvents(user: User | null = null): Promise<ParsedEvent[]> {
         const events = user ? await this.getEvents(user) : await this.getAllEvents();
-        return events.map(event => {
-            const rule = rrulestr(event.recurrence, { dtstart: new Date(event.startTime) });
-            return { ...event, rrule: rule };
-        });
+        return events.map(Events.parseEvent);
+    }
+
+    static parseEvent(event: Event): ParsedEvent {
+        const rule = rrulestr(event.recurrence, { dtstart: new Date(event.startTime) });
+        return { ...event, rrule: rule };
+    }
+
+    static isRunning(event: ParsedEvent, start: Date, end: Date): boolean {
+        const duration = event.endTime - event.startTime;
+        const dates = event.rrule.between(new Date(start.getTime() - duration), end);
+        return dates.length > 0;
+    }
+
+    static isUpcomingToday(event: ParsedEvent, date: Date): boolean {
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        return Events.isRunning(event, date, end);
+    }
+
+    static isToday(event: ParsedEvent, date: Date): boolean {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        return Events.isRunning(event, start, end);
     }
 }
 

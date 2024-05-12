@@ -5,7 +5,7 @@ import { PushSubscription } from "@block65/webcrypto-web-push";
 import { Notifications } from "../lib/notifications";
 import { Users } from "../lib/db/users";
 import { Subscriptions } from "../lib/db/subscriptions";
-import { Events } from "../lib/db/events";
+import { Event, Events, ParsedEvent } from "../lib/db/events";
 
 export default (app: Hono<{ Bindings: Bindings, Variables: Variables }>) => {
     app.use("/user/*", authMiddleware);
@@ -17,7 +17,16 @@ export default (app: Hono<{ Bindings: Bindings, Variables: Variables }>) => {
     app.get("/user/events", async ctx => {
         const user = Users.from(ctx).getUser();
         const events = await Events.from(ctx).getEvents(user);
-        return ctx.json(events);
+        const parsed = events.map(Events.parseEvent);
+        const now = new Date();
+
+        const byId = (event: ParsedEvent) => event.id;
+        const today = parsed.filter(event => Events.isToday(event, now)).map(byId);
+        const upcoming = parsed.filter(event => Events.isUpcomingToday(event, now)).map(byId);
+        const currentlyRunning = parsed.filter(event => Events.isRunning(event, now, now)).map(byId);
+
+        const response = { events, today, upcoming, currentlyRunning } as EventsResponse;
+        return ctx.json(response);
     });
 
     app.get("/user/subscription", async ctx => {
@@ -38,4 +47,11 @@ export default (app: Hono<{ Bindings: Bindings, Variables: Variables }>) => {
         );
         return ctx.text("OK");
     });
+}
+
+interface EventsResponse {
+    events: Event[];
+    today: string[];
+    upcoming: string[];
+    currentlyRunning: string[];
 }
