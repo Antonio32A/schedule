@@ -90,7 +90,7 @@ export interface CalendarEvent {
         timeZone: string;
     };
     endTimeUnspecified: boolean;
-    recurrence: string[];
+    recurrence?: string[];
     recurringEventId: string;
     originalStartTime: {
         dateTime: string;
